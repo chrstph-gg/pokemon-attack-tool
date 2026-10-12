@@ -21,7 +21,7 @@ Dual types are NOT stored, but are multiplied from the single table
 import csv, io, json, os, sys, urllib.request
 from collections import defaultdict
 
-ROOT = os.PAT (Pokemon-Attack-Tool)h.dirname(os.PAT (Pokemon-Attack-Tool)h.dirname(os.PAT (Pokemon-Attack-Tool)h.absPAT (Pokemon-Attack-Tool)h(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSV_BASE = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/"
 FILES = ["languages", "pokemon", "pokemon_species_names", "pokemon_types",
          "pokemon_forms", "pokemon_form_names", "types", "type_names", "type_efficacy"]
@@ -81,7 +81,7 @@ SKIP_FORMS = ("-totem", "-gmax", "-cap")   # Duplikate ohne eigenen Typen-Nutzen
 
 # Namensmuster fuer Formen, die in der Quelle nicht in jeder Sprache
 # einen fertigen Namen haben. {b} = Name der Grundform.
-REGION_PAT (Pokemon-Attack-Tool)TERN = {
+REGION_PATTERN = {
     "alola":  {"de": "Alola-{b}",  "en": "Alolan {b}",   "fr": "{b} d’Alola",
                "ja": "{b}（アローラのすがた）", "ko": "{b}(알로라의 모습)", "zh": "{b}（阿罗拉的样子）"},
     "galar":  {"de": "Galar-{b}",  "en": "Galarian {b}", "fr": "{b} de Galar",
@@ -101,7 +101,7 @@ FORM_SUFFIX = {
     "zen":          {"de": "Trance", "en": "Zen Mode", "fr": "Mode Transe",
                      "ja": "ダルマモード", "ko": "달마모드", "zh": "达摩模式"},
 }
-MEGA_PAT (Pokemon-Attack-Tool)TERN = {"de": "Mega-{b}{s}", "en": "Mega {b}{s}", "fr": "Méga-{b}{s}",
+MEGA_PATTERN = {"de": "Mega-{b}{s}", "en": "Mega {b}{s}", "fr": "Méga-{b}{s}",
                 "ja": "メガ{b}{s}", "ko": "메가{b}{s}", "zh": "超级{b}{s}"}
 
 
@@ -109,7 +109,7 @@ def load(src):
     data = {}
     for f in FILES:
         if src:
-            with open(os.PAT (Pokemon-Attack-Tool)h.join(src, f + ".csv"), encoding="utf-8") as fh:
+            with open(os.path.join(src, f + ".csv"), encoding="utf-8") as fh:
                 text = fh.read()
         else:
             text = urllib.request.urlopen(CSV_BASE + f + ".csv").read().decode("utf-8")
@@ -215,13 +215,13 @@ def main():
             region = next((r[1:] for r in REGIONAL if r in slug), None)
             if not is_default and base and region:
                 if code in ("de", "ja", "ko", "zh") or not name or "(" in name:
-                    name = REGION_PAT (Pokemon-Attack-Tool)TERN[region][code].format(b=base)
+                    name = REGION_PATTERN[region][code].format(b=base)
                     suf = next((v[code] for k, v in FORM_SUFFIX.items() if slug.endswith(k)), None)
                     if suf:
                         name += f" ({suf})"
             elif not is_default and base and "-mega" in slug and (not name or "(" in name):
                 tail = slug.split("-mega", 1)[1].strip("-").upper()
-                name = MEGA_PAT (Pokemon-Attack-Tool)TERN[code].format(b=base, s=(" " + tail) if tail else "")
+                name = MEGA_PATTERN[code].format(b=base, s=(" " + tail) if tail else "")
             if name:
                 names[code] = name
         if not is_default:
@@ -254,8 +254,8 @@ def main():
                      **({"a": list(dict.fromkeys(e["a"].values()))} if e["a"] else {})}
                     for e in entries],
     }
-    os.makedirs(os.PAT (Pokemon-Attack-Tool)h.join(ROOT, "assets", "data"), exist_ok=True)
-    with open(os.PAT (Pokemon-Attack-Tool)h.join(ROOT, "assets", "data", "pokedex.js"), "w", encoding="utf-8") as fh:
+    os.makedirs(os.path.join(ROOT, "assets", "data"), exist_ok=True)
+    with open(os.path.join(ROOT, "assets", "data", "pokedex.js"), "w", encoding="utf-8") as fh:
         fh.write("/* Automatisch erzeugt von tools/build_data.py - nicht von Hand bearbeiten.\n"
                  "   Fallback-Daten, falls api/pokedex.php nicht erreichbar ist. */\n")
         fh.write("window.TC_POKEDEX=")
@@ -290,7 +290,7 @@ def main():
            [(e["id"], c, n) for e in entries for c, n in e["n"].items()])
     insert("pokemon_aliases", ["pokemon_id", "label", "alias"],
            [(e["id"], k, v) for e in entries for k, v in e["a"].items()])
-    with open(os.PAT (Pokemon-Attack-Tool)h.join(ROOT, "database", "02_data.sql"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(ROOT, "database", "02_data.sql"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(out) + "\n")
     print("fertig.")
 
